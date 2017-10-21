@@ -1,19 +1,29 @@
-# Clean the raw data of trial TADS, which is stored in directory NCT00006286N01MH80008AnneMarie
+# Clean the raw data of trial TADS, which is stored in folder NCT00006286N01MH80008AnneMarie
+# The main publication of this trial is 
+# Treatment for Adolescents WithDepression Study(TADS) Team(2004).Fluoxetine,cognitive-behavioral therapy, 
+# and their combination for adolescents with depres-sion: Treatment for adolescents with depression study
+# (tads) randomized con-trolled trial.JAMA 292(7), 807–820.
+# 
 # set the current directory to be this folder and run the following code
 # output a cleaned data set with variable:
 #   subject_id: id of each subject
 #   age:  age of each subject in month,
 #   gender: an indicator with 1 indicating female, 0 indicating male,
-#   treatment: "FLX", "PBO", "CBT" or "COMB",
-#   CDRS_baseline: CDRS-R score measured at baseline
-#   CDRS_12: CDRS-R score measured at week 12
-#   CGI: CGI score measured at baseline
-#   CGAS: CGAS score measured at baseline
-#   RADS:
-#   suicide_ideation:
-#   depression_episode:
-#   comorbidity:
-
+#   treatment: "FLX" (fluoxetine), "PBO" (placebo), "CBT" (cognitive-behavioral therapy ) or "COMB" (a combination of FLX and CBT),
+#   CDRS_baseline: CDRS-R (Children’s Depression Rating Scale-Revised) score measured at baseline
+#   CDRS_12: CDRS-R (Children’s Depression Rating Scale-Revised) score measured at week 12
+#   CGI: CGI (Clinical Global Impressions severity score) score measured at baseline
+#   CGAS: CGAS (Children’s Global Assessment Scale score) score measured at baseline
+#   RADS: Reynolds Adolescent Depression Scale measured at baseline
+#   suicide_ideation: Suicidal Ideation Questionnaire-Junior High School Version total score meassured at baseline
+#   depression_episode: Current major depressive episode duration measured at baseline
+#   comorbidity: indicator of whether co-morbidity exists
+#   change_score: difference of CDRS_12 and CDRS_baseline
+# 
+# Prepocessing method:
+# 1. for getting measures at baseline, we use the non-missing value with visit week closest to 0 from visits within 2 weeks of randomization
+# 2. for getting measures at week 12, we use the non-missing value with visit week closest to 12 from visits within 2 weeks of randomization
+# 3. For missing value in baseline variables, median imputation is used.
 
 library(dplyr)
 setwd("../CovariateAdjustment/NCT00006286N01MH80008AnneMarie/")
@@ -101,13 +111,14 @@ for(i in 1:nrow(tad)){
 # Cleaning and median (mode) imputation for baseline variables
 tad$gender <- tad$gender == "F"
 tad$age <- as.numeric(tad$age)
-tad <- mutate(change_score = CDRS_12 - CDRS_baseline)
+tad <- mutate(tad, change_score = CDRS_12 - CDRS_baseline)
 tad$CDRS_baseline[which(is.na(tad$CDRS_baseline))] <- median(tad$CDRS_baseline, na.rm = T)
 tad$CGI[which(is.na(tad$CGI))] <- median(tad$CGI, na.rm = T)
 tad$CGAS[which(is.na(tad$CGAS))] <- median(tad$CGAS, na.rm = T)
 tad$RADS[which(is.na(tad$RADS))] <- median(tad$RADS, na.rm = T)
-tad$suicide_idealtion[which(is.na(tad$suicide_idealtion))] <- median(tad$suicide_idealtion, na.rm = T)
+tad$suicide_ideation[which(is.na(tad$suicide_ideation))] <- median(tad$suicide_ideation, na.rm = T)
 tad$comorbidity[which(is.na(tad$comorbidity))] <- as.numeric(names(table(tad$comorbidity))[1])
 
 #save cleaned data set as TADS.rdata
+setwd("..")
 save(tad, file = "TADS.rdata")
