@@ -32,8 +32,12 @@ anaylsis_tad <- function(data, treatment_arm, method){
                        aggregate_imbalance = sigma12 %*% solve(sigma22) %*% imbalance/sigma12 %*% solve(sigma22) %*% t(sigma12),
                        unadjusted_estimator = adjust_estimator(y, a),
                        unadj_s.d. = sqrt(sigma11),
+                       unadj_c.i. = paste("(", qnorm(0.025,adjust_estimator(y, a),sqrt(sigma11)) %>% round(2), ", ", 
+                                          qnorm(0.975,adjust_estimator(y, a),sqrt(sigma11)) %>% round(2), ")", sep = ""),
                        adjusted_estimator = adjust_estimator(y, a, w, method = method), 
                        adj_s.d. = sqrt(sigma11 - sigma12 %*% solve(sigma22) %*% t(sigma12)),
+                       adj_c.i. =  paste("(", qnorm(0.025,adjust_estimator(y, a, w, method = "ANCOVA2"), sqrt(sigma11 - sigma12 %*% solve(sigma22) %*% t(sigma12))) %>% round(2), ", ", 
+                                         qnorm(0.975,adjust_estimator(y, a, w, method = "ANCOVA2"),sqrt(sigma11 - sigma12 %*% solve(sigma22) %*% t(sigma12))) %>% round(2), ")", sep = ""),
                        condi_bias = sigma12 %*% solve(sigma22) %*% imbalance,
                        variance_reduction = sigma12 %*% solve(sigma22) %*% t(sigma12)/sigma11,
                        RE = sigma11/(sigma11 - sigma12 %*% solve(sigma22) %*% t(sigma12))

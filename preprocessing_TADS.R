@@ -18,7 +18,7 @@
 #   suicide_ideation: Suicidal Ideation Questionnaire-Junior High School Version total score meassured at baseline
 #   depression_episode: Current major depressive episode duration measured at baseline
 #   comorbidity: indicator of whether co-morbidity exists
-#   change_score: difference of CDRS_12 and CDRS_baseline
+#   change_score: CDRS_12 - CDRS_baseline
 # 
 # Prepocessing method:
 # 1. for getting measures at baseline, we use the non-missing value with visit week closest to 0 from visits within 2 weeks of randomization
