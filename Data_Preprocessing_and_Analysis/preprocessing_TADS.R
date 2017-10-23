@@ -53,11 +53,12 @@ for(i in 1:nrow(tad)){
   tad$CDRS_12[i] <- temp$cdrs_r_b[!is.na(temp$cdrs_r_b)][1]
 }
 
-# Extract CGI score and CGAS score (baseline only)
-tad <- mutate(tad, CGI = NA, CGAS = NA)
+# Extract CGI score and CGAS score (baseline only) and CGI_12
+tad <- mutate(tad, CGI = NA, CGAS = NA, CGI_improvement = NA)
 cgi <- read.table("cgi01.txt",  header = T, stringsAsFactors = F)
-cgi <- select(cgi[-1, ], subject_id = src_subject_id, CGI = cgi_si, CGAS = cgasrat, week = bsit0)
-for(i in 2:4) {cgi[,i] <- as.numeric(cgi[,i])}
+cgi <- select(cgi[-1, ], subject_id = src_subject_id, CGI = cgi_si, CGAS = cgasrat, 
+              CGI_improvement = cgi_sii, week = bsit0)
+for(i in 2:5) {cgi[,i] <- as.numeric(cgi[,i])}
 for(i in 1:nrow(tad)){
   temp <- cgi %>% 
     filter(subject_id == tad$subject_id[i]) %>% 
@@ -65,6 +66,11 @@ for(i in 1:nrow(tad)){
     arrange(abs(week))
   tad$CGI[i] <- temp$CGI[!is.na(temp$CGI)][1]
   tad$CGAS[i] <- temp$CGAS[!is.na(temp$CGAS)][1]
+  temp <- cgi %>%
+    filter(subject_id == tad$subject_id[i]) %>%
+    filter(abs(week - 12) < 2) %>%
+    arrange(abs(week - 12))
+  tad$CGI_improvement[i] <- temp$CGI_improvement[!is.na(temp$CGI_improvement)][1]
 }
 
 # Extract RADS score (baseline only)
@@ -111,7 +117,8 @@ for(i in 1:nrow(tad)){
 # Cleaning and median (mode) imputation for baseline variables
 tad$gender <- tad$gender == "F"
 tad$age <- as.numeric(tad$age)
-tad <- mutate(tad, change_score = CDRS_12 - CDRS_baseline)
+tad <- mutate(tad, change_score = CDRS_12 - CDRS_baseline, 
+              binary_CGI_improvement = (CGI_improvement <= 2))
 tad$CDRS_baseline[which(is.na(tad$CDRS_baseline))] <- median(tad$CDRS_baseline, na.rm = T)
 tad$CGI[which(is.na(tad$CGI))] <- median(tad$CGI, na.rm = T)
 tad$CGAS[which(is.na(tad$CGAS))] <- median(tad$CGAS, na.rm = T)
