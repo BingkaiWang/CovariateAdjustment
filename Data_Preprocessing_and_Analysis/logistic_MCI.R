@@ -1,48 +1,54 @@
 library(dplyr)
-load("Data_Preprocessing_and_Analysis/TADS.rdata")
-tad <- subset(tad, !is.na(tad$binary_CGI_improvement) & (tad$treatment %in% c("COMB", "PBO")))
-tad$treatment = tad$treatment == "COMB"
-tad <- select(tad, binary_CGI_improvement, treatment, age, gender, CDRS_baseline, CGI, 
-              CGAS, RADS, suicide_ideation, depression_episode, comorbidity)
+load("Data_Preprocessing_and_Analysis/ACDS.rdata")
 
-#calculate modified R-squared
-y1 <- tad$binary_CGI_improvement[tad$treatment]
-y0 <- tad$binary_CGI_improvement[!tad$treatment]
-glm1 <- glm(binary_CGI_improvement~. , data = tad[tad$treatment, -2], family = "binomial")
-glm0 <- glm(binary_CGI_improvement~. , data = tad[!tad$treatment, -2], family = "binomial")
-pred1 <- predict(glm1, type = "response")
-pred0 <- predict(glm0, type = "response")
-modified_rsqaured <- 1 - (sum((y1 - pred1)^2) + sum((y0 - pred0)^2)) / 
-  (sum((y1 - mean(y1))^2) + (sum((y0 - mean(y0))^2)))
+# get binary outcome
+d <- mutate(d, diagnosis12 = NA)
+diagnosis <- read.csv("Data_Preprocessing_and_Analysis/diagsum.csv")
+diagnosis <- select(diagnosis, ptno, viscode, dgalzhei)
+for(i in 1: nrow(d)){
+  temp <- filter(diagnosis, ptno == d$rid[i]) %>%
+    filter(viscode == 'm12')
+  if(nrow(temp)){
+    d$diagnosis12[i] <- temp$dgalzhei
+  }
+}
+d$diagnosis12[d$diagnosis12 == -1] <- NA
+d$diagnosis12 <- d$diagnosis12 > 0
+
+mci <- subset(d, !is.na(d$diagnosis12) & (d$arm %in% c("Placebo", "Donepezil")))
+mci$arm <- mci$arm == "Donepezil"
+# mci <- select(mci, diagnosis12, arm, age, mmscore, apoe4)
+mci <- select(mci, diagnosis12, arm, age, mmscore, apoe4, female, cototscr, adtotscr, gdstot, Y0)
+
 
 # simulation
-n <- nrow(tad)
+n <- nrow(mci)
 sim_size <- 10000
-p1 <- mean(tad$binary_CGI_improvement[tad$treatment])
-p0 <- mean(tad$binary_CGI_improvement[!tad$treatment])
-q <- (p1 - p0)/(1 - mean(tad$binary_CGI_improvement))
+p1 <- mean(mci$diagnosis12[mci$arm])
+p0 <- mean(mci$diagnosis12[!mci$arm])
+q <- abs((p1 - p0)/(1 - mean(mci$diagnosis12)))
 risk_diff <- data.frame(unadjusted = rep(NA, sim_size), standadized = rep(NA, sim_size))
 log_odds <- data.frame(unadjusted = rep(NA, sim_size), standardied = rep(NA, sim_size), 
                        logistic = rep(NA, sim_size))
 for(i in 1: sim_size){
   # generate data
-  stad <- sample_n(tad, size = n, replace = T)
-  stad$treatment <- runif(n) < 0.5
-  indi <- (stad$binary_CGI_improvement == 0) & (stad$treatment == 1)
-  stad$binary_CGI_improvement[indi] <- as.integer(runif(sum(indi)) < q)
+  smci <- sample_n(mci, size = n, replace = T)
+  smci$arm <- runif(n) < 0.5
+  indi <- (smci$diagnosis12 == 0) & (smci$arm == 0)
+  smci$diagnosis12[indi] <- as.integer(runif(sum(indi)) < q)
   
   # estimation
-  glm_result <- glm(binary_CGI_improvement ~ . , data = stad, family = "binomial")
+  glm_result <- glm(diagnosis12 ~ . , data = smci, family = "binomial")
   # glm_result <- glm(binary_CGI_improvement ~ treatment + CGI , data = stad, family = "binomial")
   log_odds$logistic[i] <- glm_result$coefficients[2]
-  pred_p1 <- predict(glm_result, cbind(treatment = T, stad[,-(1:2)]), type = "response") %>% mean
-  pred_p0 <- predict(glm_result, cbind(treatment = F, stad[,-(1:2)]), type = "response") %>% mean
+  pred_p1 <- predict(glm_result, cbind(arm = T, smci[,-(1:2)]), type = "response") %>% mean
+  pred_p0 <- predict(glm_result, cbind(arm = F, smci[,-(1:2)]), type = "response") %>% mean
   # pred_p1 <- predict(glm_result, data.frame(treatment = T, CGI = stad[,6]), type = "response") %>% mean
   # pred_p0 <- predict(glm_result, data.frame(treatment = F, CGI = stad[,6]), type = "response") %>% mean
   risk_diff$standadized[i] <- pred_p1 - pred_p0
   log_odds$standardied[i] <- log(pred_p1/(1-pred_p1)) - log(pred_p0/(1- pred_p0))
-  sp1 <- mean(stad$binary_CGI_improvement[stad$treatment])
-  sp0 <- mean(stad$binary_CGI_improvement[!stad$treatment])
+  sp1 <- mean(smci$diagnosis12[smci$arm])
+  sp0 <- mean(smci$diagnosis12[!smci$arm])
   risk_diff$unadjusted[i] = sp1 -sp0
   log_odds$unadjusted[i] = log(sp1/(1-sp1)) - log(sp0/(1-sp0))
 }

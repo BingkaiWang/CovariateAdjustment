@@ -5,6 +5,7 @@ TADS.rdata
 METS.rdata
 ACDS.rdata
 /DataResults/
+diagsum.csv
 
 # History files
 .Rhistory
