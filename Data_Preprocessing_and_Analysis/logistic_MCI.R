@@ -60,11 +60,12 @@ risk_result <- matrix(NA, nrow = 3, ncol = 2,
 logodds_result <- matrix(NA, nrow = 3, ncol = 3, 
                          dimnames = list(c("mean", "s.e.", "RE"),
                                          c("unadjusted", "standardized", "logistic")))
-logodds_result[1,] <- colMeans(log_odds)
-logodds_result[2,] <- cov(log_odds) %>% diag %>% sqrt
-logodds_result[3,] <- logodds_result[1,]^2/logodds_result[2,]^2/(logodds_result[1,3]^2/logodds_result[2,3]^2)
-logodds_result
 risk_result[1,] <- colMeans(risk_diff)
 risk_result[2,] <- cov(risk_diff) %>% diag %>% sqrt
-risk_result[3,] <- risk_result[1,]^2/risk_result[2,]^2/(logodds_result[1,3]^2/logodds_result[2,3]^2)
+risk_result[3,] <- risk_result[1,]^2/risk_result[2,]^2/(risk_result[1,1]^2/risk_result[2,1]^2)
 risk_result
+logodds_result[1,] <- colMeans(log_odds)
+logodds_result[2,] <- cov(log_odds) %>% diag %>% sqrt
+logodds_result[3,] <- logodds_result[1,]^2/logodds_result[2,]^2/(logodds_result[1,1]^2/logodds_result[2,1]^2)
+logodds_result
+
