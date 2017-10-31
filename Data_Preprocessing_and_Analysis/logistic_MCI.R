@@ -20,6 +20,43 @@ mci$arm <- mci$arm == "Donepezil"
 # mci <- select(mci, diagnosis12, arm, age, mmscore, apoe4)
 mci <- select(mci, diagnosis12, arm, age, mmscore, apoe4, female, cototscr, adtotscr, gdstot, Y0)
 
+# function for calculating all kinds of estimators
+logistic_estimator <- function(d, method = "unadjusted"){
+  y <- d[,1] # y is the binary outcome vector
+  a <- d[,2] # a is the binary treatment allocation vector, with 0 as the placebo arm
+  w <- d[,-c(1,2)] # w is the baseline matrix
+  if(method == "unadjusted"){
+    p1 <- mean(y[a])
+    p0 <- mean(y[!a])
+    estimator <- log(p1/(1-p1)) - log(p0/(1-p0))
+  }else if(method == "standardized"){
+    d <- cbind(y, a, w)
+    glm_result <- glm(y ~ . , data = d, family = "binomial")
+    pred_p1 <- predict(glm_result, cbind(a = T, w), type = "response") %>% mean
+    pred_p0 <- predict(glm_result, cbind(a = F, w), type = "response") %>% mean
+    estimator <- log(pred_p1/(1-pred_p1)) - log(pred_p0/(1- pred_p0))
+  }else if(method == "logistic_coef"){
+    glm_result <- glm(y ~ . , data = cbind(y, a, w), family = "binomial")
+    estimator <- glm_result$coefficients[2]
+  }else{
+    stop('Unspecified method', call. = F)
+  }
+}
+
+# making estimator summary table
+summary_table <- data.frame(estimate = rep(NA, 3), se = rep(NA, 3), CI = rep(NA, 3), pvalue = rep(NA, 3))
+rownames(summary_table) <- c("unadjused", "standardized", "logistic coefficient")
+summary_table$estimate[1] <- logistic_estimator(mci)
+summary_table$estimate[2] <- logistic_estimator(mci, method = "standardized")
+summary_table$estimate[3] <- logistic_estimator(mci, method = "logistic_coef")
+n <- nrow(tad)
+result <-bcanon(1:n, nboot = 100, theta = function(x, d) {logistic_estimator(d[x,])}, mci, alpha = c(0.025,0.975))
+summary_table$CI[1] <- paste0("(", round(result$confpoints[1,2],2), ", ", round(result$confpoints[2,2],2), ")")
+result <-bcanon(1:n, nboot = 100, theta = function(x, d) {logistic_estimator(d[x,], method = "standardized")}, mci, alpha = c(0.025,0.975))
+summary_table$CI[2] <- paste0("(", round(result$confpoints[1,2],2), ", ", round(result$confpoints[2,2],2), ")")
+result <-bcanon(1:n, nboot = 100, theta = function(x, d) {logistic_estimator(d[x,], method = "logistic_coef")}, mci, alpha = c(0.025,0.975))
+summary_table$CI[3] <- paste0("(", round(result$confpoints[1,2],2), ", ", round(result$confpoints[2,2],2), ")")
+
 
 # simulation
 n <- nrow(mci)
