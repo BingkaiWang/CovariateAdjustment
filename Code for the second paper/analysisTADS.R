@@ -143,6 +143,7 @@ p.val.log.reg = 2* (1- pnorm(test.stat.logreg))
 # summary log odds result
 CI_num2str <- function(ci){ paste0("(", round(ci[1],2), ", ", round(ci[2], 2), ")")}
 output_logodss <- data.frame(estimate_logodds = round(c(result$res.unad, result$res.gcomp, result$res.log.reg),2),
+                             se_logodds = sqrt(c(result$var.unad, result$var.gcomp, result$var.log.reg.boot)),
                      CI_logodds = c(CI_num2str(conf.int.unad), CI_num2str(conf.int.gcomp), CI_num2str(conf.int.log.reg)),
                      Pvalue_logodds = round(c(p.val.unad, p.val.gcomp, p.val.log.reg),2))
 
@@ -171,6 +172,7 @@ p.val.log.reg = 2* (1- pnorm(test.stat.logreg))
 # summary riskdiff result
 CI_num2str <- function(ci){ paste0("(", round(ci[1],2), ", ", round(ci[2], 2), ")")}
 output_riskdiff <- data.frame(estimate_logodds = round(c(result$res.unad, result$res.gcomp, result$res.log.reg),2),
+                              se_logodds = sqrt(c(result$var.unad, result$var.gcomp, result$var.log.reg.boot)),
                      CI_logodds = c(CI_num2str(conf.int.unad), CI_num2str(conf.int.gcomp), CI_num2str(conf.int.log.reg)),
                      Pvalue_logodds = round(c(p.val.unad, p.val.gcomp, p.val.log.reg),2))
 

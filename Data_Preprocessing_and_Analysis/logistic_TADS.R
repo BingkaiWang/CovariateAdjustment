@@ -1,3 +1,4 @@
+set.seed(100)
 library(dplyr)
 library(bootstrap)
 load("Data_Preprocessing_and_Analysis/TADS.rdata")
