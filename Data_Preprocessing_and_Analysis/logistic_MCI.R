@@ -26,10 +26,12 @@
   sim_size <- 10000
   p1 <- mean(mci$diagnosis12[mci$arm])
   p0 <- mean(mci$diagnosis12[!mci$arm])
-  q <- (p1 - p0)/(1 - mean(mci$diagnosis12))
+  q <-  (p1 - p0)/(1 - mean(mci$diagnosis12))
   risk_diff <- data.frame(unadjusted = rep(NA, sim_size), standadized = rep(NA, sim_size))
   log_odds <- data.frame(unadjusted = rep(NA, sim_size), standardied = rep(NA, sim_size), 
                          logistic = rep(NA, sim_size))
+  simp1 <- rep(NA, sim_size)
+  simp2 <- rep(NA, sim_size)
   for(i in 1: sim_size){
     # generate data
     smci <- sample_n(mci, size = n, replace = T)
@@ -39,7 +41,6 @@
     
     # estimation
     glm_result <- glm(diagnosis12 ~ . , data = smci, family = "binomial")
-    # glm_result <- glm(binary_CGI_improvement ~ treatment + CGI , data = stad, family = "binomial")
     log_odds$logistic[i] <- glm_result$coefficients[2]
     pred_p1 <- predict(glm_result, cbind(arm = T, smci[,-(1:2)]), type = "response") %>% mean
     pred_p0 <- predict(glm_result, cbind(arm = F, smci[,-(1:2)]), type = "response") %>% mean
@@ -49,6 +50,8 @@
     log_odds$standardied[i] <- log(pred_p1/(1-pred_p1)) - log(pred_p0/(1- pred_p0))
     sp1 <- mean(smci$diagnosis12[smci$arm])
     sp0 <- mean(smci$diagnosis12[!smci$arm])
+    simp1[i] <- sp1
+    simp2[i] <- sp0
     risk_diff$unadjusted[i] = sp1 -sp0
     log_odds$unadjusted[i] = log(sp1/(1-sp1)) - log(sp0/(1-sp0))
   }

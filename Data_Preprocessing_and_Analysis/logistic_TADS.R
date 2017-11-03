@@ -2,8 +2,8 @@ set.seed(100)
 library(dplyr)
 library(bootstrap)
 load("Data_Preprocessing_and_Analysis/TADS.rdata")
-tad <- subset(tad, !is.na(tad$binary_CGI_improvement) & (tad$treatment %in% c("COMB", "PBO")))
-tad$treatment = tad$treatment == "COMB"
+tad <- subset(tad, !is.na(tad$binary_CGI_improvement) & (tad$treatment %in% c("FLX", "PBO")))
+tad$treatment = tad$treatment == "FLX"
 tad <- select(tad, binary_CGI_improvement, treatment, age, gender, CDRS_baseline, CGI, 
               CGAS, RADS, suicide_ideation, depression_episode, comorbidity)
 

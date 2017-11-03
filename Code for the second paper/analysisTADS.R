@@ -7,7 +7,10 @@ library(ggplot2)
 library(Hmisc)
 library(ltmle)
 
-load("Data_Preprocessing_and_Analysis/TADS.rdata") # called tad
+load("Data_Preprocessing_and_Analysis/TADS.rdata") # tad
+
+# remove missing values and extract FLX and placebo arm
+tad <- subset(tad, !is.na(tad$binary_CGI_improvement) & (tad$treatment %in% c("FLX", "PBO")))
 
 # Baseline variables
 W = select(tad, age, gender, CDRS_baseline, CGI, 
@@ -20,10 +23,11 @@ A = as.integer(tad$treatment == "FLX")
 Y = as.integer(tad$binary_CGI_improvement)
 
 # Creating dataframe used
-data.used = data.frame(Y, A, W) %>% na.omit
+data.used = data.frame(Y, A, W)
 
 # Create a funtion that calculates the estimator as well as a 95% CI using the
 # percentile bootstrap for a given dataset as well as number of bootstrap replictes
+# output is in risk difference scale
 one.sim = function(data.used, n.boot){
   
   # Calculating treatment arm specific means
@@ -74,6 +78,7 @@ logit = function(x){
 
 # Create a funtion that calculates the estimator as well as a 95% CI using the
 # percentile bootstrap for a given dataset as well as number of bootstrap replictes
+# output is in log odds scale
 one.sim.log.odds = function(data.used, n.boot){
   
   # Calculating treatment arm specific means
@@ -119,7 +124,7 @@ one.sim.log.odds = function(data.used, n.boot){
   return(ret)
 }
 
-# Running code on non-
+# Doing simulation to get log odds results
 result = one.sim.log.odds(data.used, 5000)
 
 # CI
@@ -128,7 +133,6 @@ conf.int.unad = c(result$res.unad - 1.96 * sqrt(result$var.unad), result$res.una
 conf.int.log.reg = c(result$res.log.reg - 1.96 * sqrt(result$var.log.reg.boot), result$res.log.reg + 1.96 * sqrt(result$var.log.reg.boot))
 #conf.int.gcomp.2 = c(result$res.gcomp - quantile(sqrt(result$var.gcomp), 0.025), result$res.gcomp + quantile(sqrt(result$var.gcomp), 0.975))
 #conf.int.unad.2 = c(result$res.unad - quantile(sqrt(result$var.unad), 0.025), result$res.unad + quantile(sqrt(result$var.unad), 0.025))
-
 
 # P-value
 test.stat.gcomp = result$res.gcomp/sqrt(result$var.gcomp)
@@ -145,10 +149,10 @@ CI_num2str <- function(ci){ paste0("(", round(ci[1],2), ", ", round(ci[2], 2), "
 output_logodss <- data.frame(estimate_logodds = round(c(result$res.unad, result$res.gcomp, result$res.log.reg),2),
                              se_logodds = sqrt(c(result$var.unad, result$var.gcomp, result$var.log.reg.boot)),
                      CI_logodds = c(CI_num2str(conf.int.unad), CI_num2str(conf.int.gcomp), CI_num2str(conf.int.log.reg)),
-                     Pvalue_logodds = round(c(p.val.unad, p.val.gcomp, p.val.log.reg),2))
+                     Pvalue_logodds = c(p.val.unad, p.val.gcomp, p.val.log.reg))
 
 
-# Running code on non-
+# Doing simulation to get risk difference results
 result = one.sim(data.used, 5000)
 
 # CI
@@ -174,7 +178,7 @@ CI_num2str <- function(ci){ paste0("(", round(ci[1],2), ", ", round(ci[2], 2), "
 output_riskdiff <- data.frame(estimate_logodds = round(c(result$res.unad, result$res.gcomp, result$res.log.reg),2),
                               se_logodds = sqrt(c(result$var.unad, result$var.gcomp, result$var.log.reg.boot)),
                      CI_logodds = c(CI_num2str(conf.int.unad), CI_num2str(conf.int.gcomp), CI_num2str(conf.int.log.reg)),
-                     Pvalue_logodds = round(c(p.val.unad, p.val.gcomp, p.val.log.reg),2))
+                     Pvalue_logodds = c(p.val.unad, p.val.gcomp, p.val.log.reg))
 
 # combine summary table of riskdiff and logodds
 output <- cbind(output_riskdiff, output_logodss)

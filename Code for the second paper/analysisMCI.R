@@ -1,7 +1,6 @@
 set.seed(100)
 
 # Comparing adjusted, unadjusted, and logistic regression estimator
-# Cleaning the MISTIE data
 library(dplyr)
 library(ggplot2)
 library(Hmisc)
@@ -9,13 +8,7 @@ library(ltmle)
 
 load("Data_Preprocessing_and_Analysis/ACDS.rdata") # d
 
-# Baseline variables
-W = select(d, age, mmscore, apoe4, female, cototscr, adtotscr, gdstot, Y0)
-
-# Treatment
-A = as.integer(d$arm == "Donepezil")
-
-# Outcome
+# Compute Outcome
 d <- mutate(d, diagnosis12 = NA)
 diagnosis <- read.csv("Data_Preprocessing_and_Analysis/diagsum.csv")
 diagnosis <- select(diagnosis, ptno, viscode, dgalzhei)
@@ -28,10 +21,22 @@ for(i in 1: nrow(d)){
 }
 d$diagnosis12[d$diagnosis12 == -1] <- NA
 d$diagnosis12 <- d$diagnosis12 > 0
+
+# remove missing values and extract FLX and placebo arm
+d <- subset(d, !is.na(d$diagnosis12) & (d$arm %in% c("Placebo", "Donepezil")))
+
+
+# Baseline variables
+W = select(d, age, mmscore, apoe4, female, cototscr, adtotscr, gdstot, Y0)
+
+# Treatment
+A = as.integer(d$arm == "Donepezil")
+
+# Outcome
 Y = as.integer(!d$diagnosis12)
 
 # Creating dataframe used
-data.used = data.frame(Y, A, W) %>% na.omit
+data.used = data.frame(Y, A, W)
 
 # Create a funtion that calculates the estimator as well as a 95% CI using the
 # percentile bootstrap for a given dataset as well as number of bootstrap replictes
@@ -182,12 +187,13 @@ p.val.log.reg = 2* (1- pnorm(test.stat.logreg))
 
 # summary riskdiff result
 CI_num2str <- function(ci){ paste0("(", round(ci[1],2), ", ", round(ci[2], 2), ")")}
-output_riskdiff <- data.frame(estimate_logodds = round(c(result$res.unad, result$res.gcomp, result$res.log.reg),2),
-                              se_logodds = sqrt(c(result$var.unad, result$var.gcomp, result$var.log.reg.boot)),
-                              CI_logodds = c(CI_num2str(conf.int.unad), CI_num2str(conf.int.gcomp), CI_num2str(conf.int.log.reg)),
-                              Pvalue_logodds = c(p.val.unad, p.val.gcomp, p.val.log.reg))
+output_riskdiff <- data.frame(estimate_riskdiff = round(c(result$res.unad, result$res.gcomp, result$res.log.reg),2),
+                              se_riskdiff = sqrt(c(result$var.unad, result$var.gcomp, result$var.log.reg.boot)),
+                              CI_riskdiff = c(CI_num2str(conf.int.unad), CI_num2str(conf.int.gcomp), CI_num2str(conf.int.log.reg)),
+                              Pvalue_riskdiff = c(p.val.unad, p.val.gcomp, p.val.log.reg))
 
 # combine summary table of riskdiff and logodds
 output <- cbind(output_riskdiff, output_logodss)
 rownames(output) <- c("Unadjusted", "Standardized", "Logistic")
 latexTabular(output)
+output
