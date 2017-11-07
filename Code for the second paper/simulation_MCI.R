@@ -23,6 +23,7 @@
   
   # simulation
   n <- nrow(mci)
+  n <- 10*n
   sim_size <- 10000
   p1 <- mean(mci$diagnosis12[mci$arm])
   p0 <- mean(mci$diagnosis12[!mci$arm])

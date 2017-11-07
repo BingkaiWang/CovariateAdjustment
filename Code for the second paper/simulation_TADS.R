@@ -56,6 +56,7 @@ summary_table$CI[3] <- paste0("(", round(result$confpoints[1,2],2), ", ", round(
 
 # simulation
 n <- nrow(tad)
+n <- 10*n
 sim_size <- 10000
 p1 <- mean(tad$binary_CGI_improvement[tad$treatment])
 p0 <- mean(tad$binary_CGI_improvement[!tad$treatment])
@@ -96,8 +97,8 @@ logodds_result <- matrix(NA, nrow = 3, ncol = 3,
 risk_result[1,] <- colMeans(risk_diff)
 risk_result[2,] <- cov(risk_diff) %>% diag %>% sqrt
 risk_result[3,] <- risk_result[1,]^2/risk_result[2,]^2/(risk_result[1,1]^2/risk_result[2,1]^2)
-round(risk_result, 2)
+risk_result
 logodds_result[1,] <- colMeans(log_odds)
 logodds_result[2,] <- cov(log_odds) %>% diag %>% sqrt
 logodds_result[3,] <- logodds_result[1,]^2/logodds_result[2,]^2/(logodds_result[1,1]^2/logodds_result[2,1]^2)
-round(logodds_result, 2)
+logodds_result
