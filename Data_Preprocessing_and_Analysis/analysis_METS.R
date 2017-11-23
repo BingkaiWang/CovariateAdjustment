@@ -15,7 +15,7 @@ sigma11 <- var(y1)/n1 + var(y0)/n0
 sigma12 <- cov(y1, w1)/n1 + cov(y0, w0)/n0
 sigma22 <- cov(w1)/n1 + cov(w0)/n0
 METS_result <- data.frame(treatment_arm = "METS",
-                     aggregate_imbalance = sigma12 %*% solve(sigma22) %*% imbalance/sigma12 %*% solve(sigma22) %*% t(sigma12),
+                     aggregate_imbalance = sigma12 %*% solve(sigma22) %*% imbalance/sqrt(sigma12 %*% solve(sigma22) %*% t(sigma12)),
                      unadjusted_estimator = adjust_estimator(y, a),
                      unadj_s.d. = sqrt(sigma11),
                      unadj_c.i. = paste("(", qnorm(0.025,adjust_estimator(y, a),sqrt(sigma11)) %>% round(2), ", ", 

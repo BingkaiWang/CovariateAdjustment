@@ -42,8 +42,9 @@ adjust_estimator <- function(y, a, w = NULL, delta = NULL, method = "unadjust"){
                data = cbind(y = y[indi2], w[indi2,]))    
     est <- mean(predict(arm1, w) - predict(arm0, w))
   }else if(method == "ANCOVA2"){
-    arm1 <- lm(y~., data = data.frame(y= y[a == 1], w[a == 1, ]))
-    arm0 <- lm(y~., data = data.frame(y = y[a == 0], w[a == 0, ]))
+    d <- data.frame(y = y, w)
+    arm1 <- lm(y~., data = d[a==1,])
+    arm0 <- lm(y~., data = d[a==0,])
     est <- mean(predict(arm1, w) - predict(arm0, w))
   }else{
     stop("Undefined method")
