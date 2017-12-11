@@ -6,7 +6,7 @@ METS.rdata
 ACDS.rdata
 /DataResults/
 diagsum.csv
-
+*.png
 # History files
 .Rhistory
 .Rapp.history
