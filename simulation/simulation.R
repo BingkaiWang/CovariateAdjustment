@@ -3,6 +3,19 @@ library(dplyr)
 library(cowplot)
 source(file.path("Data_Preprocessing_and_Analysis", "adjust_estimator.R"))
 
+#' Title
+#'
+#' @param n number of subjects in each simulation
+#' @param sim_size number simulations
+#' @param num_bins number of bins in the final plot
+#' @param range max and min value of aggregate imbalance considered in the final plot
+#' @param generating_function data generating function
+#' @param plot "scatter" plot or crossbar plot if not specified.
+#'
+#' @return
+#' @export
+#'
+#' @examples
 simulation <- function(n = 200, sim_size = 10000, num_bins = 16, range, 
                        generating_function, plot = "crossbar"){
   imbalance <- rep(NA,  sim_size)
@@ -51,19 +64,26 @@ simulation <- function(n = 200, sim_size = 10000, num_bins = 16, range,
   sim_plot <- ggplot(hist_imbalance, aes(sqrt(n)* imbalance, sqrt(n) *mean, 
                              ymin = sqrt(n) *(mean - sqrt(variance)), 
                              ymax = sqrt(n) * (mean + sqrt(variance)))) +
-    geom_crossbar(aes(color = label), #position = position_dodge(0),
+    geom_crossbar(aes(linetype = label), #position = position_dodge(0),
                   fatten = 1, size = 1, width = 0.8*sqrt(n)*(range[2]-range[1])/num_bins, alpha = 1) +
     labs(colour = NULL, y = "sqrt(n) * estimator") +
     theme(text = element_text(size = 16), legend.text = element_text(size = 16))
   return(sim_plot)
 }
 
-simulation(sim_size = 10000, num_bins = 16, range = c(-0.16,0.16),
+p1 <- simulation(sim_size = 10000, num_bins = 16, range = c(-0.16,0.16),
            generating_function = function(a,w) {a*w})
-
-simulation(sim_size = 10000, num_bins = 16, range = c(-0.16,0.16),
+pscatter <- simulation(sim_size = 10000, num_bins = 16, range = c(-0.16,0.16),
            generating_function = function(a,w) {a*w}, plot = "scatter")
-save_plot('scatter.png', scatter_plot, ncol = 2)
+# save_plot('scatter.png', scatter_plot, ncol = 2)
+plot1 <- plot_grid(pscatter, p1, labels = c('', 'C'), ncol = 1, rel_heights = c(1.2,1))
+save_plot('sim1.png', plot1, ncol = 2, nrow = 2)
 
-simulation(sim_size = 10000, num_bins = 16, range = c(-0.16,0.16),
+p2 <- simulation(sim_size = 10000, num_bins = 16, range = c(-0.16,0.16),
            generating_function = function(a,w) {a*w + (1-a)*(1-w^2)})
+p3 <- simulation(sim_size = 10000, num_bins = 16, range = c(-0.2,0.2),
+                 generating_function = function(a,w) {(2*a-1)*w})
+p4 <- simulation(sim_size = 10000, num_bins = 16, range = c(-0.1,0.1),
+                 generating_function = function(a,w) {(2*a-1)*(w^2-1)})
+
+plot_grid(p1,p2, labels = c('A', 'B'), ncol = 2)
