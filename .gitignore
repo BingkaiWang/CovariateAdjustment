@@ -7,6 +7,8 @@ ACDS.rdata
 /DataResults/
 diagsum.csv
 *.png
+Data_Preprocessing_and_Analysis/aggregate_imbalance.R
+baseline_only_adjustment.R
 # History files
 .Rhistory
 .Rapp.history
