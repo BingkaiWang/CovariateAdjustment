@@ -36,6 +36,7 @@ simulation <- function(n = 200, sim_size = 10000, num_bins = 16, range,
       geom_smooth(method = 'lm',se = F, size = 1.2) + 
       labs(x = expression(paste(sqrt(n), "(imbalance)")),
            y = expression(paste(sqrt(n), "(unadjusted estimator)"))) +
+      ylim(-2, 2) + xlim(-5, 5) + 
       theme(text = element_text(size = 20), axis.ticks = element_blank())
     d2 <- data.frame(imbalance = imbalance[1:3000], adj = adj_est[1:3000])
     p2 <- ggplot(d2, aes(x = sqrt(n) * imbalance, y = sqrt(n) * adj)) + 
@@ -43,6 +44,7 @@ simulation <- function(n = 200, sim_size = 10000, num_bins = 16, range,
       geom_smooth(method = 'lm',se = F, size = 1.2) + 
       labs(x = expression(paste(sqrt(n), "(imbalance)")),
            y = expression(paste(sqrt(n), "(ANCOVA estimator)"))) +
+      ylim(-2, 2) + xlim(-5, 5) + 
       theme(text = element_text(size = 20), axis.ticks = element_blank())    
     scatter_plot <- plot_grid(p1, p2, labels = c("A","B"))
     return(scatter_plot)
@@ -78,10 +80,12 @@ simulation <- function(n = 200, sim_size = 10000, num_bins = 16, range,
 }
 
 p1 <- simulation(sim_size = 10000, num_bins = 16, range = c(-0.3,0.3),
-                 generating_function = function(a,w) {0.2*w})
+                 generating_function = function(a,w) {0.2*w}) + ylim(-2, 2) + xlim(-5, 5)
 pscatter <- simulation(sim_size = 10000, num_bins = 16, range = c(-0.3,0.3),
            generating_function = function(a,w) {0.2*w}, plot = "scatter")
-plot1 <- plot_grid(pscatter, p1, labels = c('', 'C'), ncol = 1, rel_heights = c(1.1,1))
+pbarrange <- plot_grid(p1, NULL, labels = c('C', ''), ncol = 2, rel_widths = c(2.62, 1))
+plot1 <- plot_grid(pscatter, pbarrange, ncol = 1)
+# plot1 <- plot_grid(pscatter, p1, labels = c('', 'C'), ncol = 1, rel_heights = c(1.1,1))
 plot1
 save_plot('sim1.png', plot1, ncol = 2, nrow = 2)
 
