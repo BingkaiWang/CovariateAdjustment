@@ -4,7 +4,7 @@ adjust_estimator <- function(y, a, w = NULL, delta = NULL, method = "unadjust"){
   # categorical datatype;
   # a is the treatment arm, and must be a binary vector;
   # w is the baseline varible matrix or dataframe;
-  # delta is the indicator vector of non-missing outcomes;
+  # delta is the indicator vector of missing outcomes;
   # method is to specify the estimator to use, it can be "unadjust", "IPW", "DR-WLS", 
   #  "DR-WLS-U" (handling missing value) and "ANCOVA2"
   # Output:
@@ -30,13 +30,15 @@ adjust_estimator <- function(y, a, w = NULL, delta = NULL, method = "unadjust"){
                 data = data.frame(y = y[a == 0], w[a == 0, ]))
     est <- mean(predict(arm1, w) - predict(arm0, w))
   }else if(method == "DR-WLS-U"){
+    propensity <- glm(arm~., family = binomial(), data = cbind(arm = a,w))
+    g <- predict(propensity, type = "response")
     prob_missing <- glm(delta~., family = binomial(), data = cbind(delta, a, w))
     pm <- predict(prob_missing, type = "response")
     indi1 <- (a == 1) & (!is.na(y))
     indi2 <- (a == 0) & (!is.na(y))
-    arm1 <- lm(y~., weights = 1/pm[indi1], 
+    arm1 <- lm(y~., weights = 1/g[indi1]/pm[indi1], 
                data = cbind(y= y[indi1], w[indi1,]))
-    arm0 <- lm(y~., weights = 1/pm[indi2], 
+    arm0 <- lm(y~., weights = 1/(1 - g[indi2])/pm[indi2], 
                data = cbind(y = y[indi2], w[indi2,]))    
     est <- mean(predict(arm1, w) - predict(arm0, w))
   }else if(method == "ANCOVA2"){
