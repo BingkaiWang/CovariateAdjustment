@@ -1,4 +1,4 @@
-adjust_estimator <- function(y, a, w = NULL, delta = NULL, method = "unadjust"){
+adjust_estimator <- function(y, a, w = NULL, delta = NULL, method = "unadjust", sd.cal = F){
   # Input:
   # y is the outcome, and must be a numerical vector. Here we don't deal with
   # categorical datatype;
@@ -16,6 +16,11 @@ adjust_estimator <- function(y, a, w = NULL, delta = NULL, method = "unadjust"){
   }
   if(method == "unadjust"){
     est <- mean(y[a == 1]) - mean(y[a == 0])
+    if(sd.cal ==  T){
+      # sd <- summary(lm(y~a))$coefficients[2,2]
+      n <- length(y)
+      sd <- sqrt(sum(lm(y~a)$residual^2)/(n-1)/(n-2)/var(a))
+    }
   }else if(method == "IPW"){
     propensity <- glm(a~., family = binomial(), data = cbind(a,w))
     g <- predict(propensity, type = "response")
@@ -49,8 +54,19 @@ adjust_estimator <- function(y, a, w = NULL, delta = NULL, method = "unadjust"){
   }else if(method == "ANCOVA"){
     d <- data.frame(y, a, w)
     est <- lm(y~., data = d)$coef[2]
+    if(sd.cal == TRUE){
+      # sd <- summary(lm(y~., data = d))$coefficients[2,2]
+      n <- length(y)
+      p <- ncol(w)
+      sd <- sqrt(sum(lm(y~., data = d)$residual^2)/(n-1)/(n-p-2)/var(a))
+    }
   }else{
     stop("Undefined method")
   }
-  return(est)
+  
+  if(sd.cal == T){
+    return(c(est, sd))
+  } else {
+    return(est)
+  }
 }
