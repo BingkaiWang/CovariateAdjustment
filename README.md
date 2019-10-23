@@ -9,6 +9,6 @@ To apply different methods to estimate the average treatment effect, one can use
 
 Since the data from the trials is not public, we cannot include it in this Repository. Instead, we provide code to generate sample data sets in "example.R". Running that file will create a 500-participant data set, apply the unadjusted and ANCOVA estimators, and estimate the sample size reduction from adjustment.
 
-The draft of this paper is currently stored [here](https://biostats.bepress.com/jhubiostat/paper292/), where main results and data analysis of 3 clinical trials are given.
+The paper is published in [Biometrics](https://doi.org/10.1111/biom.13062), where main results and data analysis of 3 clinical trials are given.
 
-The supporting information of this paper is currently stored [here](http://people.csail.mit.edu/mrosenblum/ANCOVA.pdf), where proofs and formulas are given.
+The supporting information of this paper is available [here](https://onlinelibrary.wiley.com/doi/full/10.1111/biom.13062), where proofs and formulas are given.
